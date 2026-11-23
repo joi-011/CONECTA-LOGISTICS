@@ -94,7 +94,7 @@ function advance(id){let l=loads.find(x=>x.id===id);let next={"Asignada":"En tr�
 $("#role").onchange=e=>{role=e.target.value;tab="home";render()};
 $("#reset").onclick=()=>{if(confirm("¿Restablecer datos de demostración?")){loads=initial;save();tab="home";render()}};
 render();
-const SUPABASE_URL = "https://epgibgxmubunmzwugcby.supabase.co/rest/v1/";
+const SUPABASE_URL = "https://epgibgxmubunmzwugcby.supabase.co";
 const SUPABASE_KEY = "sb_publishable_TkMxzwRMzdgMjUcU8SWaUw_ThuJjcxQ";
   const db = window.supabase.createClient(
   SUPABASE_URL,
