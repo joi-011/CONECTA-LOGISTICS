@@ -107,32 +107,37 @@ document.getElementById("registroForm").addEventListener("submit", async (e) => 
   mensaje.classList.remove("hide");
   mensaje.textContent = "Creando tu cuenta...";
 
-  const tipo = document.getElementById("tipoCuenta").value;
-  const nombre = document.getElementById("nombreRegistro").value.trim();
-  const correo = document.getElementById("correoRegistro").value.trim();
-  const telefono = document.getElementById("telefonoRegistro").value.trim();
-  const pais = document.getElementById("paisRegistro").value;
-  const password = document.getElementById("passwordRegistro").value;
+  try {
+    const tipo = document.getElementById("tipoCuenta").value;
+    const nombre = document.getElementById("nombreRegistro").value.trim();
+    const correo = document.getElementById("correoRegistro").value.trim();
+    const telefono = document.getElementById("telefonoRegistro").value.trim();
+    const pais = document.getElementById("paisRegistro").value;
+    const password = document.getElementById("passwordRegistro").value;
 
-  const { data, error } = await db.auth.signUp({
-    email: correo,
-    password: password,
-    options: {
-      data: {
-        nombre: nombre,
-        telefono: telefono,
-        tipo: tipo,
-        pais: pais
+    const { data, error } = await db.auth.signUp({
+      email: correo,
+      password: password,
+      options: {
+        data: {
+          nombre,
+          telefono,
+          tipo,
+          pais
+        }
       }
+    });
+
+    if (error) {
+      mensaje.textContent = "Error: " + error.message;
+      return;
     }
-  });
 
-  if (error) {
-    mensaje.textContent = "Error: " + error.message;
-    return;
+    mensaje.textContent = data.session
+      ? "¡Cuenta creada correctamente!"
+      : "Revisa tu correo para confirmar tu cuenta.";
+
+  } catch (err) {
+    mensaje.textContent = "Error de conexión: " + err.message;
   }
-
-  mensaje.textContent = data.session
-    ? "¡Cuenta creada correctamente!"
-    : "Revisa tu correo para confirmar tu cuenta.";
 });
