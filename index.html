@@ -84,8 +84,47 @@ function card(title,value,sub){return `<div class="card"><div class="muted">${ti
 function loadCard(l){let q=l.quotes||[];return `<article class="item"><div class="item-head"><div><b>#${l.id} · ${l.cargo}</b><div class="muted">${l.origin} → ${l.dest}</div></div><span class="pill ${l.status==="Entregada"?"ok":l.status==="En tránsito"?"warn":""}">${l.status}</span></div><p class="muted">Vehículo: ${l.vehicle} · Fecha: ${l.date} · Presupuesto: ${money(l.budget)}</p><div class="muted">${q.length} cotización(es)</div>${q.map((x,i)=>`<div class="item"><b>${x.carrier}</b> · ${money(x.price)} ${x.verified?'<span class="pill ok">Perfil revisado en demo</span>':'<span class="pill warn">Pendiente</span>'}<div class="muted">${x.note||""}</div>${role==="company"&&l.status==="Publicada"?`<button class="green" onclick="accept(${l.id},${i})">Aceptar oferta</button>`:""}</div>`).join("")}
 <div class="actions">${role==="carrier"&&l.status==="Publicada"?`<button onclick="quote(${l.id})">Enviar cotización</button>`:""}${role==="admin"?`<button class="secondary" onclick="advance(${l.id})">Avanzar estado</button>`:""}${role==="company"&&l.status==="Asignada"?`<button class="secondary" onclick="advance(${l.id})">Marcar en tránsito</button>`:""}${role==="company"&&l.status==="En tránsito"?`<button class="green" onclick="advance(${l.id})">Confirmar entrega</button>`:""}</div></article>`}
 function render(){nav();let c=$("#content");if(tab==="home"){c.innerHTML=`<div class="grid">${card("Cargas registradas",loads.length,"En esta demo")}${card("Cotizaciones",loads.reduce((a,l)=>a+(l.quotes||[]).length,0),"Ofertas recibidas")}${card("Operaciones activas",loads.filter(l=>["Asignada","En tránsito"].includes(l.status)).length,"Requieren seguimiento")}</div><div class="card" style="margin-top:12px"><h3>${role==="company"?"Bienvenido, empresa":role==="carrier"?"Panel del transportista":"Panel administrativo"}</h3><p class="muted">${role==="company"?"Publica una carga y compara ofertas de transporte.":role==="carrier"?"Revisa cargas disponibles y envía tus cotizaciones.":"Supervisa publicaciones, ofertas y estados de las operaciones."}</p><button onclick="tab='${role==="company"?"new":"loads"}';render()">${role==="company"?"Publicar una carga":"Ver cargas"}</button></div>`}
-else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3><form id="newload"><label>Empresa<input name="company" required placeholder="Nombre comercial"></label><div class="row"><label>Origen<input name="origin" required placeholder="Ej. Zona Libre de Colón"></label><label>Destino<input name="dest" required placeholder="Ej. Ciudad de Panamá"></label></div><label>Descripción de mercancía<input name="cargo" required placeholder="Cantidad, pallets, tipo de carga"></label><div class="row"><label>Tipo de vehículo<select name="vehicle"><option>Furgón 40 pies</option><option>Camión cerrado</option><option>Plataforma</option><option>Refrigerado</option><option>Contenedor</option><option>Otro</option></select></label><label>Fecha requerida<input type="date" name="date" required></label></div><label>Presupuesto estimado (B/.)<input type="number" name="budget" min="1" step=".01" required></label><button>Publicar carga</button></form></div>`;$("#newload").onsubmit=e=>{e.preventDefault();let d=Object.fromEntries(new FormData(e.target));loads.unshift({id:Date.now(),...d,budget:Number(d.budget),status:"Publicada",quotes:[]});save();tab="loads";render()}}
-else if(tab==="loads"){let list=role==="carrier"?loads.filter(l=>l.status==="Publicada"):loads;c.innerHTML=`<h3>${role==="carrier"?"Cargas disponibles":role==="admin"?"Todas las operaciones":"Mis cargas"}</h3>${list.length?list.map(loadCard).join(""):"<div class='card muted'>No hay cargas para mostrar.</div>"}`}
+else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3><form id="newload"><label>Empresa<input name="company" required placeholder="Nombre comercial"></label><div class="row"><label>Origen<input name="origin" required placeholder="Ej. Zona Libre de Colón"></label><label>Destino<input name="dest" required placeholder="Ej. Ciudad de Panamá"></label></div><label>Descripción de mercancía<input name="cargo" required placeholder="Cantidad, pallets, tipo de carga"></label><div class="row"><label>Tipo de vehículo<select name="vehicle"><option>Furgón 40 pies</option><option>Camión cerrado</option><option>Plataforma</option><option>Refrigerado</option><option>Contenedor</option><option>Otro</option></select></label><label>Fecha requerida<input type="date" name="date" required></label></div><label>Presupuesto estimado (B/.)<input type="number" name="budget" min="1" step=".01" required></label><button>Publicar carga</button></form></div>`;$("#newload").onsubmit=async e=>{
+  e.preventDefault();
+
+  const d=Object.fromEntries(new FormData(e.target));
+
+  const {data:{user},error:userError}=await db.auth.getUser();
+
+  if(userError || !user){
+    alert("Debes iniciar sesión para publicar una carga.");
+    return;
+  }
+
+  const {error}=await db.from("cargas").insert({
+    empresa_id:user.id,
+    origen:d.origin,
+    destino:d.dest,
+    tipo_carga:"Mercancía general",
+    descripcion:`${d.cargo} | Vehículo: ${d.vehicle} | Fecha: ${d.date} | Empresa: ${d.company}`,
+    precio:Number(d.budget),
+    estado:"disponible"
+  });
+
+  if(error){
+    alert("Error al publicar: "+error.message);
+    return;
+  }
+
+  loads.unshift({
+    id:Date.now(),
+    ...d,
+    budget:Number(d.budget),
+    status:"Publicada",
+    quotes:[]
+  });
+
+  save();
+  alert("¡Carga publicada correctamente!");
+  tab="loads";
+  render();
+};
+}
 else if(tab==="profile"){c.innerHTML=`<div class="card"><h3>Perfil del transportista</h3><form id="profile"><label>Nombre / empresa<input required placeholder="Nombre comercial"></label><label>Teléfono<input required placeholder="+507"></label><label>Tipo de vehículo<select><option>Furgón</option><option>Camión cerrado</option><option>Plataforma</option><option>Refrigerado</option></select></label><label>Placa<input required placeholder="ABC123"></label><label>Documentos (estado)<select><option>Pendiente de revisión</option><option>En revisión</option></select></label><button type="button" onclick="alert('Perfil de demostración. En producción se cargarán documentos de forma privada y se validarán.')">Guardar perfil demo</button></form></div>`}
 else if(tab==="review"){c.innerHTML=`<div class="card"><h3>Centro de verificación</h3><p class="muted">En producción, aquí se revisarán identidad, registro comercial, licencia, circulación, seguro y permisos aplicables según país y tipo de carga.</p><div class="pill warn">Integración documental pendiente</div><p>La aprobación debe ser realizada por personal autorizado. No se debe marcar como verificado un documento solo por haber sido cargado.</p></div>`}}
 function quote(id){let l=loads.find(x=>x.id===id);let price=prompt("Tu cotización en balboas:");if(!price||isNaN(Number(price))||Number(price)<=0)return;let name=prompt("Nombre de tu empresa/transportista:","Transportista nuevo")||"Transportista nuevo";l.quotes.push({carrier:name,price:Number(price),note:"Oferta enviada",verified:false});save();render()}
