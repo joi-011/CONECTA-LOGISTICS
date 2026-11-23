@@ -139,6 +139,26 @@ const SUPABASE_KEY = "sb_publishable_TkMxzwRMzdgMjUcU8SWaUw_ThuJjcxQ";
   SUPABASE_URL,
   SUPABASE_KEY
 );
+  async function iniciarSesion() {
+  const correo = prompt("Escribe tu correo:");
+  if (!correo) return;
+
+  const password = prompt("Escribe tu contraseña:");
+  if (!password) return;
+
+  const { data, error } = await db.auth.signInWithPassword({
+    email: correo,
+    password: password
+  });
+
+  if (error) {
+    alert("Error al iniciar sesión: " + error.message);
+    return;
+  }
+
+  alert("¡Bienvenido a CONECTA!");
+  render();
+}
 document.getElementById("registroForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
