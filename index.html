@@ -126,7 +126,49 @@ else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3
   render();
 };
 }
-else if(tab==="profile"){c.innerHTML=`<div class="card"><h3>Perfil del transportista</h3><form id="profile"><label>Nombre / empresa<input required placeholder="Nombre comercial"></label><label>Teléfono<input required placeholder="+507"></label><label>Tipo de vehículo<select><option>Furgón</option><option>Camión cerrado</option><option>Plataforma</option><option>Refrigerado</option></select></label><label>Placa<input required placeholder="ABC123"></label><label>Documentos (estado)<select><option>Pendiente de revisión</option><option>En revisión</option></select></label><button type="button" onclick="alert('Perfil de demostración. En producción se cargarán documentos de forma privada y se validarán.')">Guardar perfil demo</button></form></div>`}
+else if(tab==="profile"){
+c.innerHTML=`<div class="card">
+<h3>Perfil del transportista</h3>
+<form id="profile">
+<label>Nombre / empresa<input name="nombre" required placeholder="Nombre comercial"></label>
+<label>Teléfono<input name="telefono" required placeholder="+507"></label>
+<label>Tipo de vehículo<select name="tipo_vehiculo">
+<option>Furgón</option>
+<option>Camión cerrado</option>
+<option>Plataforma</option>
+<option>Refrigerado</option>
+</select></label>
+<label>Capacidad<input name="capacidad" required placeholder="Ej. 20 toneladas"></label>
+<label>Placa<input name="placa" required placeholder="ABC123"></label>
+<button type="submit">Guardar vehículo</button>
+</form></div>`;
+
+$("#profile").onsubmit=async e=>{
+e.preventDefault();
+const d=Object.fromEntries(new FormData(e.target));
+const {data:{user},error:userError}=await db.auth.getUser();
+
+if(userError || !user){
+alert("Debes iniciar sesión.");
+return;
+}
+
+const {error}=await db.from("vehiculos").insert({
+transportista_id:user.id,
+tipo_vehiculo:d.tipo_vehiculo,
+capacidad:d.capacidad,
+placa:d.placa
+});
+
+if(error){
+alert("Error al guardar: "+error.message);
+return;
+}
+
+alert("¡Vehículo registrado correctamente!");
+e.target.reset();
+};
+}
 else if(tab==="review"){c.innerHTML=`<div class="card"><h3>Centro de verificación</h3><p class="muted">En producción, aquí se revisarán identidad, registro comercial, licencia, circulación, seguro y permisos aplicables según país y tipo de carga.</p><div class="pill warn">Integración documental pendiente</div><p>La aprobación debe ser realizada por personal autorizado. No se debe marcar como verificado un documento solo por haber sido cargado.</p></div>`}}
 function quote(id){let l=loads.find(x=>x.id===id);let price=prompt("Tu cotización en balboas:");if(!price||isNaN(Number(price))||Number(price)<=0)return;let name=prompt("Nombre de tu empresa/transportista:","Transportista nuevo")||"Transportista nuevo";l.quotes.push({carrier:name,price:Number(price),note:"Oferta enviada",verified:false});save();render()}
 function accept(id,i){let l=loads.find(x=>x.id===id);if(!confirm("¿Aceptar esta cotización?"))return;l.selected=l.quotes[i].carrier;l.agreed=l.quotes[i].price;l.status="Asignada";save();render()}
