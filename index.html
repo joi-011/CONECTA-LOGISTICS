@@ -21,6 +21,50 @@ form{display:grid;gap:10px}label{display:grid;gap:5px;font-size:13px;font-weight
 <body>
 <header><div class="brand">CONECTA <small>LOGISTICS NETWORK</small></div><div style="display:flex;gap:8px;align-items:center"><span style="font-size:12px">Vista:</span><select id="role"><option value="company">Empresa</option><option value="carrier">Transportista</option><option value="admin">Administración</option></select><button class="secondary" id="reset">Reiniciar demo</button></div></header>
 <main>
+  <section class="card" id="registro">
+  <h2>Crear cuenta en CONECTA</h2>
+  <p class="muted">Únete a nuestra red logística de Centroamérica.</p>
+
+  <form id="registroForm">
+    <label>Tipo de cuenta
+      <select id="tipoCuenta" required>
+        <option value="">Seleccionar</option>
+        <option value="empresa">Empresa</option>
+        <option value="transportista">Transportista</option>
+      </select>
+    </label>
+
+    <label>Nombre completo o empresa
+      <input id="nombreRegistro" required>
+    </label>
+
+    <label>Correo electrónico
+      <input id="correoRegistro" type="email" required>
+    </label>
+
+    <label>Teléfono
+      <input id="telefonoRegistro" required>
+    </label>
+
+    <label>País
+      <select id="paisRegistro" required>
+        <option value="Panamá">Panamá</option>
+        <option value="Costa Rica">Costa Rica</option>
+        <option value="Nicaragua">Nicaragua</option>
+        <option value="Honduras">Honduras</option>
+        <option value="El Salvador">El Salvador</option>
+        <option value="Guatemala">Guatemala</option>
+      </select>
+    </label>
+
+    <label>Contraseña
+      <input id="passwordRegistro" type="password" minlength="8" required>
+    </label>
+
+    <button type="submit">Crear mi cuenta</button>
+    <p id="mensajeRegistro" class="notice hide"></p>
+  </form>
+</section>
 <section class="hero"><h1>Conectamos cargas. Movemos negocios.</h1><p>Encuentra transporte confiable, compara ofertas y sigue cada operación.</p></section>
 <div id="notice" class="notice">Prototipo demostrativo: los datos se guardan en este navegador. No procesa pagos ni verifica documentos reales.</div>
 <nav id="tabs"></nav><section id="content"></section>
