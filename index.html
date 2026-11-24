@@ -126,6 +126,42 @@ else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3
   render();
 };
 }
+  else if(tab==="loads"){
+c.innerHTML=`<div class="card">
+<h3>Cargas disponibles</h3>
+<p class="muted">Consultando cargas publicadas...</p>
+<div id="listaCargas"></div>
+</div>`;
+
+(async()=>{
+const {data,error}=await db
+.from("cargas")
+.select("*")
+.eq("estado","disponible")
+.order("creado_en",{ascending:false});
+
+const lista=$("#listaCargas");
+
+if(error){
+lista.innerHTML="Error al consultar cargas: "+error.message;
+return;
+}
+
+if(!data || data.length===0){
+lista.innerHTML="No hay cargas disponibles por el momento.";
+return;
+}
+
+lista.innerHTML=data.map(l=>`
+<div class="item">
+<b>${l.origen} → ${l.destino}</b>
+<p>${l.descripcion||""}</p>
+<p>Tipo: ${l.tipo_carga}</p>
+<p>Presupuesto: ${money(l.precio)}</p>
+</div>
+`).join("");
+})();
+}
 else if(tab==="profile"){
 c.innerHTML=`<div class="card">
 <h3>Perfil del transportista</h3>
