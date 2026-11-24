@@ -126,11 +126,11 @@ else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3
   render();
 };
 }
-  else if(tab==="loads"){
+else if(tab==="loads"){
 c.innerHTML=`<div class="card">
 <h3>Cargas disponibles</h3>
-<p class="muted">Consultando cargas publicadas...</p>
-<div id="listaCargas"></div>
+<p class="muted">Selecciona una carga y envía tu oferta de transporte.</p>
+<div id="listaCargas">Consultando cargas...</div>
 </div>`;
 
 (async()=>{
@@ -143,12 +143,12 @@ const {data,error}=await db
 const lista=$("#listaCargas");
 
 if(error){
-lista.innerHTML="Error al consultar cargas: "+error.message;
+lista.innerHTML="Error: "+error.message;
 return;
 }
 
 if(!data || data.length===0){
-lista.innerHTML="No hay cargas disponibles por el momento.";
+lista.innerHTML="No hay cargas disponibles.";
 return;
 }
 
@@ -158,6 +158,9 @@ lista.innerHTML=data.map(l=>`
 <p>${l.descripcion||""}</p>
 <p>Tipo: ${l.tipo_carga}</p>
 <p>Presupuesto: ${money(l.precio)}</p>
+<label>Tu precio de transporte (B/.)</label>
+<input type="number" min="1" step="0.01" id="oferta-${l.id}" placeholder="Ej. 150.00">
+<button onclick="enviarOferta('${l.id}')">Enviar cotización</button>
 </div>
 `).join("");
 })();
