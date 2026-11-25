@@ -169,19 +169,32 @@ else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3
 }
 else if(tab==="loads"){
 c.innerHTML=`<div class="card">
-<h3>Cargas disponibles</h3>
-<p class="muted">Selecciona una carga y envía tu oferta de transporte.</p>
-<div id="listaCargas">Consultando cargas...</div>
+<h3>${role==="company"?"Mis cargas y cotizaciones":"Cargas disponibles"}</h3>
+<p class="muted">${role==="company"?"Consulta las ofertas recibidas.":"Selecciona una carga y envía tu oferta."}</p>
+<div id="listaCargas">Consultando...</div>
 </div>`;
 
 (async()=>{
-const {data,error}=await db
-.from("cargas")
+const lista=$("#listaCargas");
+
+const {data:{user},error:userError}=await db.auth.getUser();
+
+if(userError || !user){
+lista.innerHTML="Debes iniciar sesión.";
+return;
+}
+
+let consulta=db.from("cargas")
 .select("*")
-.eq("estado","disponible")
 .order("creado_en",{ascending:false});
 
-const lista=$("#listaCargas");
+if(role==="carrier"){
+consulta=consulta.eq("estado","disponible");
+}else{
+consulta=consulta.eq("empresa_id",user.id);
+}
+
+const {data,error}=await consulta;
 
 if(error){
 lista.innerHTML="Error: "+error.message;
@@ -189,9 +202,44 @@ return;
 }
 
 if(!data || data.length===0){
-lista.innerHTML="No hay cargas disponibles.";
+lista.innerHTML=role==="company"?"Todavía no tienes cargas publicadas.":"No hay cargas disponibles.";
 return;
 }
+
+if(role==="company"){
+
+const ids=data.map(l=>l.id);
+
+const {data:solicitudes,error:solError}=await db
+.from("solicitudes")
+.select("*")
+.in("carga_id",ids);
+
+if(solError){
+lista.innerHTML="Error al consultar cotizaciones: "+solError.message;
+return;
+}
+
+lista.innerHTML=data.map(l=>{
+const ofertas=(solicitudes||[]).filter(s=>String(s.carga_id)===String(l.id));
+
+return `
+<div class="item">
+<b>${l.origen} → ${l.destino}</b>
+<p>${l.descripcion||""}</p>
+<p>Presupuesto: ${money(l.precio)}</p>
+<p><b>${ofertas.length} cotización(es) recibida(s)</b></p>
+${ofertas.length?ofertas.map(o=>`
+<div class="item">
+<p>Precio ofrecido: ${money(o.precio_oferta)}</p>
+<p>Estado: ${o.estado}</p>
+</div>
+`).join(""):"<p>Aún no hay ofertas para esta carga.</p>"}
+</div>
+`;
+}).join("");
+
+}else{
 
 lista.innerHTML=data.map(l=>`
 <div class="item">
@@ -204,6 +252,9 @@ lista.innerHTML=data.map(l=>`
 <button onclick="enviarOferta('${l.id}')">Enviar cotización</button>
 </div>
 `).join("");
+
+}
+
 })();
 }
 else if(tab==="profile"){
