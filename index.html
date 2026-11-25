@@ -216,6 +216,7 @@ $("#profile").onsubmit=async e=>{
 e.preventDefault();
 const d=Object.fromEntries(new FormData(e.target));
 const {data:{user},error:userError}=await db.auth.getUser();
+  alert("ID del usuario conectado: " + user.id);
 
 if(userError || !user){
 alert("Debes iniciar sesión.");
