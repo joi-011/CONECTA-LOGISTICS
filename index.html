@@ -69,6 +69,17 @@ form{display:grid;gap:10px}label{display:grid;gap:5px;font-size:13px;font-weight
 <div id="notice" class="notice">Prototipo demostrativo: los datos se guardan en este navegador. No procesa pagos ni verifica documentos reales.</div>
 <nav id="tabs"></nav><section id="content"></section>
   <button onclick="iniciarSesion()">Iniciar sesión</button>
+  async function cerrarSesion(){
+  const {error}=await db.auth.signOut();
+
+  if(error){
+    alert("Error al cerrar sesión: "+error.message);
+    return;
+  }
+
+  alert("Sesión cerrada correctamente.");
+  render();
+}
 <div class="footer">CONECTA MVP 1.0 · Demostración local · Panamá</div>
 </main>
 <script>
