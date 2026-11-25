@@ -100,7 +100,7 @@ async function enviarOferta(cargaId){
   }
 
   const {error}=await db.from("solicitudes").insert({
-    carga_id:Number(cargaId),
+   carga_id:cargaId,
     transportista_id:user.id,
     estado:"pendiente",
     precio_oferta:precio,
