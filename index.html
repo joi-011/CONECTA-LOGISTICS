@@ -259,6 +259,11 @@ ${ofertas.length?ofertas.map(o=>`
 <div class="item">
 <p>Precio ofrecido: ${money(o.precio_oferta)}</p>
 <p>Estado: ${o.estado}</p>
+${o.estado==="pendiente"?`
+<button class="green" onclick="aceptarOfertaReal('${o.id}','${l.id}')">
+Aceptar cotización
+</button>
+`:""}
 </div>
 `).join(""):"<p>Aún no hay ofertas para esta carga.</p>"}
 </div>
