@@ -97,9 +97,37 @@ function card(title,value,sub){return `<div class="card"><div class="muted">${ti
 function loadCard(l){let q=l.quotes||[];return `<article class="item"><div class="item-head"><div><b>#${l.id} · ${l.cargo}</b><div class="muted">${l.origin} → ${l.dest}</div></div><span class="pill ${l.status==="Entregada"?"ok":l.status==="En tránsito"?"warn":""}">${l.status}</span></div><p class="muted">Vehículo: ${l.vehicle} · Fecha: ${l.date} · Presupuesto: ${money(l.budget)}</p><div class="muted">${q.length} cotización(es)</div>${q.map((x,i)=>`<div class="item"><b>${x.carrier}</b> · ${money(x.price)} ${x.verified?'<span class="pill ok">Perfil revisado en demo</span>':'<span class="pill warn">Pendiente</span>'}<div class="muted">${x.note||""}</div>${role==="company"&&l.status==="Publicada"?`<button class="green" onclick="accept(${l.id},${i})">Aceptar oferta</button>`:""}</div>`).join("")}
 <div class="actions">${role==="carrier"&&l.status==="Publicada"?`<button onclick="enviarOferta('${l.id}')">Enviar cotización</button>`:""}${role==="admin"?`<button class="secondary" onclick="advance(${l.id})">Avanzar estado</button>`:""}${role==="company"&&l.status==="Asignada"?`<button class="secondary" onclick="advance(${l.id})">Marcar en tránsito</button>`:""}${role==="company"&&l.status==="En tránsito"?`<button class="green" onclick="advance(${l.id})">Confirmar entrega</button>`:""}</div></article>`}<button class="green" onclick="window.aceptarOfertaReal('${o.id}','${l.id}')">
 async function enviarOferta(cargaId){
-  window.aceptarOfertaReal = aceptarOfertaReal;
-  async function aceptarOfertaReal(solicitudId,cargaId){
+  const precio = Number(document.getElementById("oferta-"+cargaId).value);
 
+  if(!precio || precio<=0){
+    alert("Escribe un precio válido.");
+    return;
+  }
+
+  const {data:{user},error:userError}=await db.auth.getUser();
+
+  if(userError || !user){
+    alert("Debes iniciar sesión como transportista.");
+    return;
+  }
+
+  const {error}=await db.from("solicitudes").insert({
+    carga_id:cargaId,
+    transportista_id:user.id,
+    estado:"pendiente",
+    precio_oferta:precio,
+    comision:0
+  });
+
+  if(error){
+    alert("Error al enviar cotización: "+error.message);
+    return;
+  }
+
+  alert("¡Cotización enviada correctamente!");
+}
+
+async function aceptarOfertaReal(solicitudId,cargaId){
   if(!confirm("¿Deseas aceptar esta cotización?")) return;
 
   const {data:{user},error:userError}=await db.auth.getUser();
@@ -120,38 +148,10 @@ async function enviarOferta(cargaId){
   }
 
   alert("¡Cotización aceptada!");
-
   render();
 }
-  const precio = Number(document.getElementById("oferta-"+cargaId).value);
 
-  if(!precio || precio<=0){
-    alert("Escribe un precio válido.");
-    return;
-  }
-
-  const {data:{user},error:userError}=await db.auth.getUser();
-
-  if(userError || !user){
-    alert("Debes iniciar sesión como transportista.");
-    return;
-  }
-
-  const {error}=await db.from("solicitudes").insert({
-   carga_id:cargaId,
-    transportista_id:user.id,
-    estado:"pendiente",
-    precio_oferta:precio,
-    comision:0
-  });
-
-  if(error){
-    alert("Error al enviar cotización: "+error.message);
-    return;
-  }
-
-  alert("¡Cotización enviada correctamente!");
-}
+window.aceptarOfertaReal = aceptarOfertaReal;
 function render(){nav();let c=$("#content");if(tab==="home"){c.innerHTML=`<div class="grid">${card("Cargas registradas",loads.length,"En esta demo")}${card("Cotizaciones",loads.reduce((a,l)=>a+(l.quotes||[]).length,0),"Ofertas recibidas")}${card("Operaciones activas",loads.filter(l=>["Asignada","En tránsito"].includes(l.status)).length,"Requieren seguimiento")}</div><div class="card" style="margin-top:12px"><h3>${role==="company"?"Bienvenido, empresa":role==="carrier"?"Panel del transportista":"Panel administrativo"}</h3><p class="muted">${role==="company"?"Publica una carga y compara ofertas de transporte.":role==="carrier"?"Revisa cargas disponibles y envía tus cotizaciones.":"Supervisa publicaciones, ofertas y estados de las operaciones."}</p><button onclick="tab='${role==="company"?"new":"loads"}';render()">${role==="company"?"Publicar una carga":"Ver cargas"}</button></div>`}
 else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3><form id="newload"><label>Empresa<input name="company" required placeholder="Nombre comercial"></label><div class="row"><label>Origen<input name="origin" required placeholder="Ej. Zona Libre de Colón"></label><label>Destino<input name="dest" required placeholder="Ej. Ciudad de Panamá"></label></div><label>Descripción de mercancía<input name="cargo" required placeholder="Cantidad, pallets, tipo de carga"></label><div class="row"><label>Tipo de vehículo<select name="vehicle"><option>Furgón 40 pies</option><option>Camión cerrado</option><option>Plataforma</option><option>Refrigerado</option><option>Contenedor</option><option>Otro</option></select></label><label>Fecha requerida<input type="date" name="date" required></label></div><label>Presupuesto estimado (B/.)<input type="number" name="budget" min="1" step=".01" required></label><button>Publicar carga</button></form></div>`;$("#newload").onsubmit=async e=>{
   e.preventDefault();
