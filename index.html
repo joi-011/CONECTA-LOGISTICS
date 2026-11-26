@@ -69,7 +69,11 @@ form{display:grid;gap:10px}label{display:grid;gap:5px;font-size:13px;font-weight
 <div id="notice" class="notice">Prototipo demostrativo: los datos se guardan en este navegador. No procesa pagos ni verifica documentos reales.</div>
 <nav id="tabs"></nav><section id="content"></section>
   <button onclick="iniciarSesion()">Iniciar sesión</button>
-  async function cerrarSesion(){
+
+<div class="footer">CONECTA MVP 1.0 · Demostración local · Panamá</div>
+</main>
+<script>
+    async function cerrarSesion(){
   const {error}=await db.auth.signOut();
 
   if(error){
@@ -80,9 +84,6 @@ form{display:grid;gap:10px}label{display:grid;gap:5px;font-size:13px;font-weight
   alert("Sesión cerrada correctamente.");
   render();
 }
-<div class="footer">CONECTA MVP 1.0 · Demostración local · Panamá</div>
-</main>
-<script>
 const initial=[
 {id:1,company:"Comercial Istmeña",origin:"Zona Libre de Colón",dest:"Ciudad de Panamá",cargo:"20 pallets de mercancía general",vehicle:"Furgón 40 pies",date:"2026-12-02",budget:450,status:"Publicada",quotes:[{carrier:"Transporte del Istmo",price:420,note:"Disponible mañana",verified:true}]},
 {id:2,company:"Importadora del Pacífico",origin:"Panamá",dest:"David, Chiriquí",cargo:"8 pallets",vehicle:"Camión cerrado",date:"2026-12-04",budget:600,status:"Publicada",quotes:[]}
