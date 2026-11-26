@@ -138,6 +138,8 @@ else if(tab==="new"){c.innerHTML=`<div class="card"><h3>Publicar nueva carga</h3
     alert("Debes iniciar sesión para publicar una carga.");
     return;
   }
+  alert("Correo conectado: " + user.email);
+alert("ID conectado: " + user.id);
 
   const {error}=await db.from("cargas").insert({
     empresa_id:user.id,
